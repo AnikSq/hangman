@@ -16,12 +16,14 @@ class Hangman
     end
 
 
+    
     def playing_game
         saying
+        puts "To save game press 1"
+        puts "To load last save press 2"
         until @count == 0 || @guess_word == @word
             save_game
             load_game
-            p @word
             ask_player
             check_word_include
             show_chars
@@ -33,19 +35,26 @@ class Hangman
 
     
     def save_game
+        require 'yaml'
         if @player_input == '1'
-            File.open("./save_not_hangman.yml",'w') {|f| YAML.dump([] << self, f) }
+            @save = {'name'=>@name,'word'=>@word,'count'=>@count,'guess_word'=>@guess_word,'incorrect_words'=>@incorrect_words}
+            output = File.new('prefs.yml','w')
+            output.puts YAML.dump(@save)
+            output.close
         end
     end
 
     def load_game
-        if @player_input == '2'
-            begin 
-                yaml = YAML.load_file("./save_not_hangman.yml")
-                @history = yaml[0].history
-            rescue
-                @history = []
-            end
+        require 'yaml'
+        if @player_input == '2' 
+            output = File.new('prefs.yml','r')
+            @save = YAML.load(output.read)
+            output.close
+            @name = @save['name']
+            @word = @save['word']
+            @count = @save['count']
+            @guess_word = @save['guess_word']
+            @incorrect_words = @save['incorrect_words']
         end
     end
 
@@ -85,11 +94,11 @@ class Hangman
         end
     end
 
+
   
 
     def check_word_include
         if @word.include?(@player_input)
-            puts "Ho Ho, Right Word guessed"
             index = 0
             i = 0
             index_list = []
@@ -102,16 +111,18 @@ class Hangman
             end
             if @guess_word[index] == " "
                 @guess_word[index] = @player_input
+                puts "Ho Ho, Right Word guessed"
+            else
+                puts "That place is already taken"
             end
-            
-            
+        elsif @player_input == '1' || @player_input == '2'
+            puts "Okay"
         else
             puts "Wrong word , wrong word"
             @count -=1
             @incorrect_words << @player_input
             puts "For reference here are the wrong words"
             puts "You've already entered #{@incorrect_words}"
-           
         end
     end
 
